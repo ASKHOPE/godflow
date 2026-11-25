@@ -351,6 +351,111 @@ export function renderArticleStudio() {
   );
 
   let currentParentId = "";
+  let treeSearchQuery = "";
+
+  const treeSearchIn = h("input", {
+    type: "search",
+    class: "input",
+    placeholder: "Quick search...",
+    style: "font-size:var(--text-xs);padding:0.35rem 0.55rem;",
+    onInput: (e) => {
+      treeSearchQuery = e.target.value.trim().toLowerCase();
+      refreshNoteTree();
+    }
+  });
+
+  const treeListEl = h("div", { class: "org-folder-list", style: "flex:1;overflow-y:auto;" });
+
+  function renderNoteTreeNodes(parentId = "", depth = 0) {
+    const children = savedArticles.filter((a) => {
+      const matchesParent = (a.parentId || "") === parentId;
+      const matchesSearch = !treeSearchQuery || a.title.toLowerCase().includes(treeSearchQuery) || a.slug.toLowerCase().includes(treeSearchQuery);
+      return treeSearchQuery ? (depth === 0 && matchesSearch) : matchesParent;
+    });
+    const items = [];
+    for (const art of children) {
+      items.push(
+        h("button", {
+          type: "button",
+          class: `org-folder-btn${slugIn.value === art.slug ? " is-active" : ""}`,
+          style: depth > 0 ? `padding-left:${0.65 + depth * 0.85}rem;` : "",
+          onClick: () => {
+            titleIn.value = art.title;
+            slugIn.value = art.slug;
+            currentParentId = art.parentId || "";
+            currentDraftHtml = art.html || `<p>${art.excerpt || ""}</p>`;
+            if (htmlSourceMode) rawHtmlArea.value = currentDraftHtml;
+            else safeSetHTML(visualEditor, currentDraftHtml);
+            updateWords();
+            refreshNoteTree();
+            refreshChildCards();
+          }
+        }, h("span", {}, `${depth > 0 ? "↳ " : "📄 "}${art.title.slice(0, 22)}`), h("span", { class: "mono-meta" }, art.status === "Publish-Ready" ? "#live" : "#draft"))
+      );
+      if (!treeSearchQuery) {
+        items.push(...renderNoteTreeNodes(art.slug, depth + 1));
+      }
+    }
+    return items;
+  }
+
+  function refreshNoteTree() {
+    const nodes = savedArticles.length
+      ? renderNoteTreeNodes("", 0)
+      : [h("span", { class: "mono-meta", style: "padding:0.5rem;" }, "No notes yet — click + New Note")];
+    treeListEl.replaceChildren(...nodes);
+  }
+
+  const childCardsEl = h("div", { style: "display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;" });
+  function refreshChildCards() {
+    const currentSlug = slugIn.value.trim();
+    const kids = currentSlug ? savedArticles.filter((a) => (a.parentId || "") === currentSlug) : [];
+    if (!kids.length) {
+      childCardsEl.replaceChildren();
+      return;
+    }
+    childCardsEl.replaceChildren(
+      ...kids.map((k) =>
+        h("button", {
+          type: "button",
+          class: "card",
+          style: "padding:0.55rem 0.85rem;min-width:160px;text-align:left;cursor:pointer;flex-direction:row;align-items:center;justify-content:space-between;gap:0.5rem;",
+          onClick: () => {
+            titleIn.value = k.title;
+            slugIn.value = k.slug;
+            currentParentId = k.parentId || "";
+            currentDraftHtml = k.html || `<p>${k.excerpt || ""}</p>`;
+            if (htmlSourceMode) rawHtmlArea.value = currentDraftHtml;
+            else safeSetHTML(visualEditor, currentDraftHtml);
+            updateWords();
+            refreshNoteTree();
+            refreshChildCards();
+          }
+        }, h("span", { style: "font-size:var(--text-xs);font-weight:600;" }, `📄 ${k.title}`), h("span", { class: "mono-meta" }, k.status === "Publish-Ready" ? "#live" : "#draft"))
+      )
+    );
+  }
+
+  refreshNoteTree();
+  refreshChildCards();
+
+  const newRootNoteBtn = h("button", {
+    type: "button",
+    class: "btn btn--subtle btn--sm",
+    title: "New Root Note",
+    onClick: () => {
+      currentParentId = "";
+      const suffix = Date.now().toString(36).slice(-4);
+      titleIn.value = "New note";
+      slugIn.value = `note-${suffix}`;
+      currentDraftHtml = "<p>Type the content of your note here...</p>";
+      if (htmlSourceMode) rawHtmlArea.value = currentDraftHtml;
+      else safeSetHTML(visualEditor, currentDraftHtml);
+      updateWords();
+      saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), parentId: "", html: currentDraftHtml, publishToHub: false });
+      showToast("Created new root note", { tone: "ok" });
+    }
+  }, "+");
 
   const newChildNoteBtn = h("button", {
     type: "button",
@@ -359,9 +464,9 @@ export function renderArticleStudio() {
       const parentSlug = slugIn.value.trim();
       currentParentId = parentSlug;
       const suffix = Date.now().toString(36).slice(-4);
-      titleIn.value = parentSlug ? "Child Note" : "New Note";
+      titleIn.value = parentSlug ? "Child note" : "New note";
       slugIn.value = `${parentSlug ? `${parentSlug}-` : "note-"}${suffix}`;
-      currentDraftHtml = "<p>Start writing your note...</p>";
+      currentDraftHtml = "<p>Type the content of your note here...</p>";
       if (htmlSourceMode) rawHtmlArea.value = currentDraftHtml;
       else safeSetHTML(visualEditor, currentDraftHtml);
       updateWords();
@@ -379,59 +484,32 @@ export function renderArticleStudio() {
     }
   }, "#publish-ready + ETAPI Sync");
 
-  function renderNoteTreeNodes(parentId = "", depth = 0) {
-    const children = savedArticles.filter((a) => (a.parentId || "") === parentId);
-    const items = [];
-    for (const art of children) {
-      items.push(
-        h("button", {
-          type: "button",
-          class: `org-folder-btn${slugIn.value === art.slug ? " is-active" : ""}`,
-          style: depth > 0 ? `padding-left:${0.65 + depth * 0.75}rem;` : "",
-          onClick: () => {
-            titleIn.value = art.title;
-            slugIn.value = art.slug;
-            currentParentId = art.parentId || "";
-            currentDraftHtml = art.html || `<p>${art.excerpt || ""}</p>`;
-            if (htmlSourceMode) rawHtmlArea.value = currentDraftHtml;
-            else safeSetHTML(visualEditor, currentDraftHtml);
-            updateWords();
-          }
-        }, h("span", {}, `${depth > 0 ? "↳ " : ""}${art.title.slice(0, 24)}`), h("span", { class: "mono-meta" }, art.status === "Published" ? "#live" : "#draft"))
-      );
-      items.push(...renderNoteTreeNodes(art.slug, depth + 1));
-    }
-    return items;
-  }
-
   const editorPane = createToolCard(
     "3. TriliumNext Note Tree & Rich Editor",
     htmlSourceMode ? "HTML / Code" : "Trilium Rich Note",
     "ok",
-    h("div", { class: "org-layout" },
-      h("aside", { class: "card", style: "padding:0.65rem;gap:0.45rem;" },
-        h("div", { class: "card-header" },
-          h("strong", { style: "font-size:var(--text-xs);" }, "Trilium Note Tree"),
-          createStatusPill("ETAPI", "info")
-        ),
-        h("div", { class: "org-folder-list" },
-          ...(savedArticles.length
-            ? renderNoteTreeNodes("", 0)
-            : [h("span", { class: "mono-meta" }, "No notes yet — click + New Article")])
-        ),
-        newChildNoteBtn,
-        triliumTagBtn
+    h("div", { style: "display:grid;grid-template-columns:250px 1fr;min-height:540px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;background:var(--bg-surface);" },
+      h("aside", { style: "display:flex;flex-direction:column;gap:0.5rem;padding:0.75rem;border-right:1px solid var(--border-subtle);background:var(--bg-elevated);" },
+        h("div", { style: "display:flex;gap:0.35rem;align-items:center;" }, treeSearchIn, newRootNoteBtn),
+        treeListEl,
+        h("div", { style: "display:flex;flex-direction:column;gap:0.35rem;padding-top:0.4rem;border-top:1px solid var(--border-subtle);" },
+          newChildNoteBtn,
+          triliumTagBtn
+        )
       ),
-      h("div", { style: "display:flex;flex-direction:column;gap:0.65rem;min-inline-size:0;" },
-        h("div", { class: "form-grid" },
-          h("div", { class: "field" }, h("label", { class: "field-label", for: "ed-title" }, "Note / Article Title"), titleIn),
-          h("div", { class: "field" }, h("label", { class: "field-label", for: "ed-slug" }, "Note Slug"), slugIn)
+      h("div", { style: "display:flex;flex-direction:column;min-inline-size:0;" },
+        h("div", { style: "padding:0.5rem 0.85rem;border-bottom:1px solid var(--border-subtle);background:var(--bg-elevated);" }, toolbar),
+        h("div", { style: "display:flex;flex-direction:column;gap:0.75rem;padding:1.25rem 1.5rem;flex:1;" },
+          h("div", { class: "form-grid" },
+            h("div", { class: "field" }, h("label", { class: "field-label", for: "ed-title" }, "Note Title"), titleIn),
+            h("div", { class: "field" }, h("label", { class: "field-label", for: "ed-slug" }, "Note Slug"), slugIn)
+          ),
+          htmlSourceMode ? rawHtmlArea : visualEditor,
+          childCardsEl
         ),
-        toolbar,
-        htmlSourceMode ? rawHtmlArea : visualEditor,
         h(
           "div",
-          { style: "display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.5rem;" },
+          { style: "display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.55rem 1rem;border-top:1px solid var(--border-subtle);background:var(--bg-elevated);" },
           wordCounter,
           h(
             "div",
@@ -440,7 +518,7 @@ export function renderArticleStudio() {
               "button",
               {
                 type: "button",
-                class: "btn btn--subtle",
+                class: "btn btn--subtle btn--sm",
                 onClick: () => {
                   saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), parentId: currentParentId, html: currentDraftHtml, publishToHub: false });
                   showToast("Saved Trilium note draft to database", { tone: "info" });
@@ -452,7 +530,7 @@ export function renderArticleStudio() {
               "button",
               {
                 type: "button",
-                class: "btn btn--primary",
+                class: "btn btn--primary btn--sm",
                 onClick: () => {
                   saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), parentId: currentParentId, html: currentDraftHtml, publishToHub: true });
                   showToast("Published note to Hub (+45m work logged)", { tone: "ok" });
