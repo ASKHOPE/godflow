@@ -658,7 +658,8 @@ export function createInitialSeed() {
       ]
     },
 
-    workspaces: [
+    workspaces: [],
+    _legacyWorkspaces: [
       {
         id: "ws-godflow",
         name: "GodFlow",

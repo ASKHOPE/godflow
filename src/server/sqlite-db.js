@@ -3,7 +3,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { createInitialSeed } from "../data/seed.js";
 
-export const SCHEMA_VERSION = "12";
+export const SCHEMA_VERSION = "13";
 export const DEFAULT_DB_PATH = path.resolve(process.cwd(), "data", "godflow.sqlite");
 
 const DOMAIN_KEYS = [

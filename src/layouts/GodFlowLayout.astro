@@ -44,7 +44,7 @@ const { title, route } = Astro.props;
             if (meta) {
               meta.content = saved === "light" || saved === "dark" ? saved : "light dark";
             }
-            var raw = localStorage.getItem("godflow:state:v12");
+            var raw = localStorage.getItem("godflow:state:v13");
             var parsed = raw ? JSON.parse(raw) : null;
             var authed = Boolean(parsed && parsed.session && parsed.session.authenticated);
             document.documentElement.dataset.godflowAuth = authed ? "app" : (parsed && parsed.session && parsed.session.authView === "login" ? "login" : "public");
