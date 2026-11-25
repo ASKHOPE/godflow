@@ -95,12 +95,20 @@ export function renderLoginGate() {
     }
   });
 
+  const usernameIn = h("input", {
+    id: "lg-username",
+    class: "input",
+    type: "text",
+    autocomplete: "username",
+    placeholder: "arnold, bablu, or user email..."
+  });
+
   const pwdIn = h("input", {
     id: "lg-pass",
     class: "input",
     type: "password",
     autocomplete: "current-password",
-    value: "godflow-sovereign-demo"
+    placeholder: "Enter password..."
   });
 
   const leftForm = h(
@@ -109,14 +117,45 @@ export function renderLoginGate() {
       style: "display:flex;flex-direction:column;gap:0.9rem;",
       onSubmit: (e) => {
         e.preventDefault();
-        const { wsId, userId } = parseCompositeAccountValue(userSel.value, wsSel.value);
-        const baseWsId = String(wsId || wsSel.value).split("::")[0];
+        const enteredUser = usernameIn.value.trim().toLowerCase();
+        const enteredPass = pwdIn.value;
+        let matched = null;
+        if (enteredUser) {
+          matched = snap.users.find(
+            (u) =>
+              (u.username && u.username.toLowerCase() === enteredUser) ||
+              (u.email && u.email.toLowerCase() === enteredUser) ||
+              u.name.toLowerCase() === enteredUser
+          );
+          if (!matched) {
+            showToast("Invalid username or email", { tone: "warn" });
+            return;
+          }
+          const expectedPass = matched.password || "1Admin";
+          if (enteredPass !== expectedPass) {
+            showToast("Incorrect password", { tone: "warn" });
+            return;
+          }
+        } else {
+          const { userId } = parseCompositeAccountValue(userSel.value, wsSel.value);
+          matched = snap.users.find((u) => u.id === userId);
+          if (!matched) {
+            showToast("Select or enter a valid user", { tone: "warn" });
+            return;
+          }
+          const expectedPass = matched.password || "1Admin";
+          if (enteredPass !== expectedPass) {
+            showToast("Incorrect password", { tone: "warn" });
+            return;
+          }
+        }
+        const targetWsId = matched.userScope === "platform" ? "__platform__" : (matched.workspaceIds?.[0] || "ws-godflow");
         loginSession({
-          userId,
-          workspaceId: baseWsId,
-          roleId: roleSel.value
+          userId: matched.id,
+          workspaceId: targetWsId,
+          roleId: matched.defaultRoleId
         });
-        showToast("Authenticated to GodFlow Multi-Tenant Workspace", { tone: "ok" });
+        showToast(`Signed in as ${matched.name}`, { tone: "ok" });
       }
     },
     h(
@@ -133,7 +172,8 @@ export function renderLoginGate() {
     h("div", { class: "field" }, h("label", { class: "field-label", for: "lg-ws" }, "1. Platform or Target Tenant"), wsSel),
     h("div", { class: "field" }, h("label", { class: "field-label", for: "lg-user" }, "2. Scoped Account in Tree"), userSel),
     h("div", { class: "field" }, h("label", { class: "field-label", for: "lg-role" }, "3. Session Role / Elevation"), roleSel),
-    h("div", { class: "field" }, h("label", { class: "field-label", for: "lg-pass" }, "Password or Hardware Passkey"), pwdIn),
+    h("div", { class: "field" }, h("label", { class: "field-label", for: "lg-username" }, "Username or Email"), usernameIn),
+    h("div", { class: "field" }, h("label", { class: "field-label", for: "lg-pass" }, "Password"), pwdIn),
     h(
       "div",
       { style: "display:flex;flex-wrap:wrap;gap:0.5rem;" },

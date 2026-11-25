@@ -958,6 +958,8 @@ export function createInitialSeed() {
       {
         id: "usr-master",
         name: "Arnold",
+        username: "arnold",
+        password: "1Admin",
         initials: "AR",
         email: "master@newlifecorp.io",
         title: "Founder & Ultimate Master · NewLifeCorp",
@@ -972,6 +974,8 @@ export function createInitialSeed() {
       {
         id: "usr-maint",
         name: "Bablu",
+        username: "bablu",
+        password: "1Admin",
         initials: "BB",
         email: "ops@newlifecorp.io",
         title: "Ultimate Maintenance · Plugins, SRE & Integrations",
