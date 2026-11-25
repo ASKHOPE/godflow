@@ -173,12 +173,12 @@ function buildPublicNavbar(activeSection = "home") {
       h(
         "a",
         { href: "/", class: "nlc-brand" },
-        h("span", { class: "brand-mark", "aria-hidden": "true" }, "NL"),
+        h("span", { class: "brand-mark", "aria-hidden": "true" }, "GF"),
         h(
           "span",
           { style: "display:flex;flex-direction:column;line-height:1.1;" },
-          h("strong", { style: "font-size:var(--text-base);" }, "NewLifeCorp"),
-          h("span", { class: "mono-meta" }, "newlifecorp.io · Multi-Tenant Creator Cloud")
+          h("strong", { style: "font-size:var(--text-base);" }, "God Flow"),
+          h("span", { class: "mono-meta" }, "godflow.media · Multi-Tenant Creator Cloud")
         )
       ),
       h(
@@ -194,8 +194,17 @@ function buildPublicNavbar(activeSection = "home") {
         { style: "display:flex;flex-wrap:wrap;gap:0.45rem;align-items:center;" },
         h(
           "button",
-          { type: "button", class: "btn btn--ghost btn--sm", onClick: () => toggleRenderedScheme() },
-          "Theme"
+          {
+            type: "button",
+            class: "icon-btn",
+            "aria-label": "Toggle color theme",
+            title: "Toggle color theme",
+            onClick: () => toggleRenderedScheme()
+          },
+          svgEl("svg", { viewBox: "0 0 24 24", width: "16", height: "16", fill: "none", stroke: "currentColor", "stroke-width": "2", "aria-hidden": "true" },
+            svgEl("circle", { cx: "12", cy: "12", r: "4" }),
+            svgEl("path", { d: "M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" })
+          )
         ),
         h(
           "button",
@@ -570,8 +579,7 @@ export function renderNewLifeCorpPage({ publicMode = false } = {}) {
     h("div", { style: "display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;justify-content:space-between;" },
       h("span", { class: "mono-meta" }, "Opens dedicated /register onboarding builder · Instant multi-channel provisioning + RBAC team setup"),
       h("div", { style: "display:flex;flex-wrap:wrap;gap:0.55rem;" },
-        h("a", { href: "/register", class: "btn btn--primary" }, "Register Company & Configure Suite →"),
-        h("a", { href: "#nlc-demos", class: "btn btn--subtle" }, "Explore Live Tenant Demos")
+        h("a", { href: "/register", class: "btn btn--primary" }, "Register Company & Configure Suite →")
       )
     )
   );
