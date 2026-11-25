@@ -1,7 +1,8 @@
-import { defineConfig } from "astro/config";
+import { defineConfig, sessionDrivers } from "astro/config";
 import vercel from "@astrojs/vercel";
 import react from "@astrojs/react";
 import emdash from "emdash/astro";
+import { libsql, sqlite } from "emdash/db";
 import { handleSqliteApiRequest } from "./src/server/sqlite-db.js";
 
 /** Attaches persistent node:sqlite API middleware (/api/db/health, /api/db/state, /api/db/reset). */
@@ -45,8 +46,16 @@ function sqlitePersistenceIntegration() {
   };
 }
 
+const emdashDb = process.env.TURSO_AUTH_TOKEN
+  ? libsql({
+      url: process.env.TURSO_DATABASE_URL || "libsql://gfsql-askhope.aws-ap-south-1.turso.io",
+      authToken: process.env.TURSO_AUTH_TOKEN
+    })
+  : sqlite({ url: "file:./data/emdash.sqlite" });
+
 export default defineConfig({
   output: "server",
   adapter: vercel(),
-  integrations: [sqlitePersistenceIntegration(), react(), emdash()]
+  session: { driver: sessionDrivers.memory() },
+  integrations: [sqlitePersistenceIntegration(), react(), emdash({ database: emdashDb })]
 });
