@@ -1,6 +1,7 @@
 import { createClient } from "@libsql/client";
 import { createInitialSeed } from "../data/seed.js";
-import { SCHEMA_VERSION, GodFlowSqliteStore } from "./sqlite-db.js";
+
+const SCHEMA_VERSION = "12";
 
 const DOMAIN_KEYS = [
   "platformData",
@@ -100,6 +101,7 @@ export async function handleDbApi({ action, method, body }) {
   const turso = getTursoClient();
 
   if (!turso) {
+    const { GodFlowSqliteStore } = await import("./sqlite-db.js");
     const store = new GodFlowSqliteStore();
     if (method === "GET" && action === "health") {
       return { status: 200, data: { ok: true, ...store.getHealth() } };
