@@ -185,7 +185,6 @@ function buildPublicNavbar(activeSection = "home") {
         "nav",
         { class: "nlc-nav", "aria-label": "NewLifeCorp navigation" },
         h("a", { href: activeSection === "home" ? "#nlc-ultimate" : "/#nlc-ultimate", class: "nlc-nav-link", "aria-current": activeSection === "home" ? "page" : undefined }, "Ultimate Suite"),
-        h("a", { href: activeSection === "home" ? "#nlc-demos" : "/#nlc-demos", class: "nlc-nav-link" }, "Login as Demo"),
         h("a", { href: activeSection === "home" ? "#nlc-scenarios" : "/#nlc-scenarios", class: "nlc-nav-link" }, "Workflows"),
         h("a", { href: activeSection === "home" ? "#nlc-plans" : "/#nlc-plans", class: "nlc-nav-link" }, "Plans & Pricing"),
         h("a", { href: "/register", class: "nlc-nav-link", "aria-current": activeSection === "register" ? "page" : undefined }, "Register Company")
@@ -202,26 +201,13 @@ function buildPublicNavbar(activeSection = "home") {
           "button",
           {
             type: "button",
-            class: "btn btn--subtle btn--sm",
+            class: "btn btn--primary btn--sm",
             onClick: () => {
               setAuthView("login");
               navigateTo("command");
             }
           },
-          "Demo Sign-In Gate"
-        ),
-        h(
-          "button",
-          {
-            type: "button",
-            class: "btn btn--primary btn--sm",
-            onClick: () => {
-              loginSession({ userId: "usr-master", workspaceId: "__platform__", roleId: "ultimate_master" });
-              navigateTo("command");
-              showToast("Signed in as Ultimate Master (NewLifeCorp Platform)", { tone: "warn" });
-            }
-          },
-          "Launch Ultimate Master Demo →"
+          "Sign In →"
         )
       )
     )
@@ -393,7 +379,14 @@ export function renderNewLifeCorpPage({ publicMode = false } = {}) {
         h(
           "div",
           { style: "display:flex;flex-wrap:wrap;gap:0.65rem;padding-top:0.25rem;" },
-          h("a", { href: "#nlc-demos", class: "btn btn--primary" }, "Try Live Account Demos →"),
+          h("button", {
+            type: "button",
+            class: "btn btn--primary",
+            onClick: () => {
+              setAuthView("login");
+              navigateTo("command");
+            }
+          }, "Sign In →"),
           h("a", { href: "/register", class: "btn btn--subtle" }, "Register Your Company →"),
           h("a", { href: "#nlc-ultimate", class: "btn btn--ghost" }, "Explore Platform Suite"),
           !publicMode ? h("a", { href: "/", class: "btn btn--ghost" }, "Back to Command Center") : null
@@ -662,7 +655,6 @@ export function renderNewLifeCorpPage({ publicMode = false } = {}) {
     heroSection,
     trustStrip,
     visualShowcase,
-    demoLauncher,
     scenariosShowcase,
     plansGrid,
     registerCtaCard,
