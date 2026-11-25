@@ -124,7 +124,10 @@ export function syncSidebarBadges(snapshot) {
       continue;
     }
     const scId = link.dataset.studioScenario;
-    if (scId) {
+    if (link.dataset.platformOnly === "true") {
+      const { isPlatformOperator } = getActiveContext(snapshot);
+      li.hidden = !isPlatformOperator;
+    } else if (scId) {
       const enabledInTenant = !wsScenarios.length || wsScenarios.includes(scId);
       const roleAllowed = activeGodMode || activeRole.id === "tenant_admin" || canAccessTool(`studio:${scId}`, snapshot);
       li.hidden = !(enabledInTenant && roleAllowed);
