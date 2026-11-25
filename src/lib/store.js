@@ -214,6 +214,7 @@ export async function hydrateStateFromSqlite() {
             state[key] = data.state[key];
           }
         }
+        state.workspaces = (state.workspaces ?? []).filter((w) => w.id !== "ws-godflow" && w.id !== "ws-tradester");
         // Validate active session references exist cleanly in hydrated DB
         if (!state.workspaces.some((w) => w.id === state.session.activeWorkspaceId)) {
           state.session.activeWorkspaceId = state.workspaces[0]?.id ?? "ws-godflow";
