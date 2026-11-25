@@ -328,47 +328,85 @@ export function renderArticleStudio() {
     }, "+ New Article")
   );
 
+  const triliumTagBtn = h("button", {
+    type: "button",
+    class: "btn btn--subtle btn--sm",
+    onClick: () => {
+      saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), html: currentDraftHtml, publishToHub: true });
+      showToast("Tagged #publish-ready & synced via TriliumNext ETAPI", { tone: "ok" });
+    }
+  }, "#publish-ready + ETAPI Sync");
+
   const editorPane = createToolCard(
-    "3. Rich Text / HTML Article Composer",
-    htmlSourceMode ? "HTML Source" : "Rich Visual",
+    "3. TriliumNext Note Tree & Rich Editor",
+    htmlSourceMode ? "HTML / Code" : "Trilium Rich Note",
     "ok",
     fileManagerBar,
-    h("div", { class: "form-grid" },
-      h("div", { class: "field" }, h("label", { class: "field-label", for: "ed-title" }, "Article Headline"), titleIn),
-      h("div", { class: "field" }, h("label", { class: "field-label", for: "ed-slug" }, "EmDash Slug"), slugIn)
-    ),
-    toolbar,
-    htmlSourceMode ? rawHtmlArea : visualEditor,
-    h(
-      "div",
-      { style: "display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.5rem;" },
-      wordCounter,
-      h(
-        "div",
-        { style: "display:flex;gap:0.5rem;" },
-        h(
-          "button",
-          {
-            type: "button",
-            class: "btn btn--subtle",
-            onClick: () => {
-              saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), html: currentDraftHtml, publishToHub: false });
-              showToast("Saved article draft", { tone: "info" });
-            }
-          },
-          "Save Draft"
+    h("div", { class: "org-layout" },
+      h("aside", { class: "card", style: "padding:0.65rem;gap:0.45rem;" },
+        h("div", { class: "card-header" },
+          h("strong", { style: "font-size:var(--text-xs);" }, "Trilium Note Tree"),
+          createStatusPill("ETAPI", "info")
         ),
+        h("div", { class: "org-folder-list" },
+          ...(savedArticles.length
+            ? savedArticles.map((art) =>
+                h("button", {
+                  type: "button",
+                  class: `org-folder-btn${slugIn.value === art.slug ? " is-active" : ""}`,
+                  onClick: () => {
+                    titleIn.value = art.title;
+                    slugIn.value = art.slug;
+                    currentDraftHtml = art.html || `<p>${art.excerpt || ""}</p>`;
+                    if (htmlSourceMode) rawHtmlArea.value = currentDraftHtml;
+                    else safeSetHTML(visualEditor, currentDraftHtml);
+                    updateWordCount();
+                  }
+                }, h("span", {}, art.title.slice(0, 26)), h("span", { class: "mono-meta" }, art.status === "Published" ? "#live" : "#draft"))
+              )
+            : [h("span", { class: "mono-meta" }, "No notes yet — click + New Article")])
+        ),
+        triliumTagBtn
+      ),
+      h("div", { style: "display:flex;flex-direction:column;gap:0.65rem;min-inline-size:0;" },
+        h("div", { class: "form-grid" },
+          h("div", { class: "field" }, h("label", { class: "field-label", for: "ed-title" }, "Note / Article Title"), titleIn),
+          h("div", { class: "field" }, h("label", { class: "field-label", for: "ed-slug" }, "EmDash / Note Slug"), slugIn)
+        ),
+        toolbar,
+        htmlSourceMode ? rawHtmlArea : visualEditor,
         h(
-          "button",
-          {
-            type: "button",
-            class: "btn btn--primary",
-            onClick: () => {
-              saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), html: currentDraftHtml, publishToHub: true });
-              showToast("Published article to EmDash Hub (+45m work logged)", { tone: "ok" });
-            }
-          },
-          "Publish to Hub & Listmonk"
+          "div",
+          { style: "display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.5rem;" },
+          wordCounter,
+          h(
+            "div",
+            { style: "display:flex;gap:0.5rem;" },
+            h(
+              "button",
+              {
+                type: "button",
+                class: "btn btn--subtle",
+                onClick: () => {
+                  saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), html: currentDraftHtml, publishToHub: false });
+                  showToast("Saved Trilium note draft", { tone: "info" });
+                }
+              },
+              "Save Note Draft"
+            ),
+            h(
+              "button",
+              {
+                type: "button",
+                class: "btn btn--primary",
+                onClick: () => {
+                  saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), html: currentDraftHtml, publishToHub: true });
+                  showToast("Published note to EmDash Hub & Listmonk (+45m work logged)", { tone: "ok" });
+                }
+              },
+              "Publish to Hub & EmDash"
+            )
+          )
         )
       )
     )
