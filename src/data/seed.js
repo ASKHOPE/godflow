@@ -252,7 +252,7 @@ export const ROLES = [
 ];
 
 export function createInitialSeed() {
-  return {
+  const rawSeed = {
     session: {
       authenticated: false,
       authView: "public",
@@ -2029,6 +2029,37 @@ export function createInitialSeed() {
         fps: 60,
         durationSec: 840
       }
+    }
+  };
+  return {
+    ...rawSeed,
+    platformData: {
+      ...rawSeed.platformData,
+      enterpriseLeads: []
+    },
+    workspaces: [],
+    users: rawSeed.users.filter((u) => u.userScope === "platform"),
+    channelStatuses: [],
+    workflowsToday: [],
+    pipelineItems: [],
+    broadcasts: [],
+    socialQueue: [],
+    shortLinks: [],
+    sponsors: [],
+    guests: [],
+    invoices: [],
+    ledgerEntries: [],
+    failedJobs: [],
+    automationEvents: [],
+    auditLog: [],
+    activeWatchers: [],
+    workEvents: [],
+    workbenchData: {
+      ...rawSeed.workbenchData,
+      researchSources: [],
+      brainstormNotes: [],
+      whiteboard: [],
+      articleDraft: { title: "", slug: "", html: "" }
     }
   };
 }

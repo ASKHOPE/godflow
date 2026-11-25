@@ -1,7 +1,7 @@
 import { createClient } from "@libsql/client";
 import { createInitialSeed } from "../data/seed.js";
 
-const SCHEMA_VERSION = "13";
+const SCHEMA_VERSION = "14";
 
 const DOMAIN_KEYS = [
   "platformData",

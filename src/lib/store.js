@@ -1,6 +1,6 @@
 import { ROLES, TEAM_UNITS, createInitialSeed } from "../data/seed.js";
 
-const STATE_STORAGE_KEY = "godflow:state:v13";
+const STATE_STORAGE_KEY = "godflow:state:v14";
 
 const PERSISTED_DOMAIN_KEYS = [
   "platformData",
