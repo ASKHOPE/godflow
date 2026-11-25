@@ -312,6 +312,7 @@ export function renderArticleStudio() {
         }
       }, art.title.slice(0, 32))
     ),
+    h("a", { href: "/_emdash/admin", target: "_blank", rel: "noopener", class: "btn btn--ghost btn--sm" }, "EmDash Admin ↗"),
     h("button", {
       type: "button",
       class: "btn btn--subtle btn--sm",

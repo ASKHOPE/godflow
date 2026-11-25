@@ -10,8 +10,12 @@
     "check": "astro check"
   },
   "dependencies": {
+    "@astrojs/react": "^7.1.9",
     "@astrojs/vercel": "^11.0.22",
     "@libsql/client": "^0.18.0",
-    "astro": "^7.4.13"
+    "astro": "^7.4.13",
+    "emdash": "^1.6.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   }
 }
