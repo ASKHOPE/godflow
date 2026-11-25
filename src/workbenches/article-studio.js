@@ -408,7 +408,6 @@ export function renderArticleStudio() {
     "3. TriliumNext Note Tree & Rich Editor",
     htmlSourceMode ? "HTML / Code" : "Trilium Rich Note",
     "ok",
-    fileManagerBar,
     h("div", { class: "org-layout" },
       h("aside", { class: "card", style: "padding:0.65rem;gap:0.45rem;" },
         h("div", { class: "card-header" },
@@ -426,7 +425,7 @@ export function renderArticleStudio() {
       h("div", { style: "display:flex;flex-direction:column;gap:0.65rem;min-inline-size:0;" },
         h("div", { class: "form-grid" },
           h("div", { class: "field" }, h("label", { class: "field-label", for: "ed-title" }, "Note / Article Title"), titleIn),
-          h("div", { class: "field" }, h("label", { class: "field-label", for: "ed-slug" }, "EmDash / Note Slug"), slugIn)
+          h("div", { class: "field" }, h("label", { class: "field-label", for: "ed-slug" }, "Note Slug"), slugIn)
         ),
         toolbar,
         htmlSourceMode ? rawHtmlArea : visualEditor,
@@ -443,8 +442,8 @@ export function renderArticleStudio() {
                 type: "button",
                 class: "btn btn--subtle",
                 onClick: () => {
-                  saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), html: currentDraftHtml, publishToHub: false });
-                  showToast("Saved Trilium note draft", { tone: "info" });
+                  saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), parentId: currentParentId, html: currentDraftHtml, publishToHub: false });
+                  showToast("Saved Trilium note draft to database", { tone: "info" });
                 }
               },
               "Save Note Draft"
@@ -455,11 +454,11 @@ export function renderArticleStudio() {
                 type: "button",
                 class: "btn btn--primary",
                 onClick: () => {
-                  saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), html: currentDraftHtml, publishToHub: true });
-                  showToast("Published note to EmDash Hub & Listmonk (+45m work logged)", { tone: "ok" });
+                  saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), parentId: currentParentId, html: currentDraftHtml, publishToHub: true });
+                  showToast("Published note to Hub (+45m work logged)", { tone: "ok" });
                 }
               },
-              "Publish to Hub & EmDash"
+              "Publish to Hub"
             )
           )
         )

@@ -2705,46 +2705,58 @@ export function removeBrainstormNote(noteId) {
   persistAndNotify("workbench:brainstorm-del");
 }
 
-export function saveArticleDraft({ title, slug, html, publishToHub = false, channelId = null }) {
-  const cleanSlug = (slug || title).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-  state.workbenchData.articleDraft = { title, slug: cleanSlug, html };
+export function saveArticleDraft({ title, slug, parentId = "", html, publishToHub = false, channelId = null }) {
+  const cleanSlug = (slug || title || "untitled-note").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  state.workbenchData.articleDraft = { title, slug: cleanSlug, parentId, html };
+
+  const resolvedChannel = resolveDefaultChannelId(channelId);
+  const channelObj = state.workspaces.flatMap((w) => w.channels ?? []).find((c) => c.id === resolvedChannel);
+  const domain = channelObj?.domain || getActiveContext(state).workspace.domain;
+  const plainText = (html || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const words = plainText ? plainText.split(" ").length : 0;
+
+  const existingIdx = state.content.articles.findIndex((a) => a.slug === cleanSlug && a.workspaceId === state.session.activeWorkspaceId);
+  const existing = existingIdx >= 0 ? state.content.articles[existingIdx] : null;
+
+  const entry = {
+    id: existing?.id || `art-${Date.now().toString(36)}`,
+    workspaceId: state.session.activeWorkspaceId,
+    channelId: resolvedChannel,
+    title: title || "Untitled Note",
+    slug: cleanSlug,
+    parentId: parentId || existing?.parentId || "",
+    html,
+    status: publishToHub ? "Publish-Ready" : (existing?.status || "Draft"),
+    publishedTargets: publishToHub ? [`${domain} Website`, "X", "LinkedIn"] : (existing?.publishedTargets || []),
+    words: Math.max(words, 1),
+    updatedAt: "2026-11-25 (Studio)",
+    triliumNoteId: existing?.triliumNoteId || `tril-${Math.floor(8900 + Math.random() * 900)}`,
+    seoScore: 95,
+    excerpt: plainText.slice(0, 175) + (plainText.length > 175 ? "…" : ""),
+    affiliateProps: existing?.affiliateProps ?? state.content.articles[0]?.affiliateProps ?? {
+      slug: "hetzner",
+      title: "Hetzner Cloud NVMe",
+      badge: "Studio Pick",
+      summary: "Self-hosted creator stack.",
+      cta: "Launch →",
+      commission: "10% rev share"
+    },
+    sponsorProps: existing?.sponsorProps ?? state.content.articles[0]?.sponsorProps ?? {
+      sponsor: "TradingView",
+      headline: "Macro & Flow Workspace",
+      copy: "30-day creator trial.",
+      cta: "Try Free",
+      slug: "tradingview"
+    }
+  };
+
+  if (existingIdx >= 0) {
+    state.content.articles = state.content.articles.map((a, i) => (i === existingIdx ? entry : a));
+  } else {
+    state.content.articles = [entry, ...state.content.articles];
+  }
 
   if (publishToHub) {
-    const resolvedChannel = resolveDefaultChannelId(channelId);
-    const channelObj = state.workspaces.flatMap((w) => w.channels ?? []).find((c) => c.id === resolvedChannel);
-    const domain = channelObj?.domain || getActiveContext(state).workspace.domain;
-    const plainText = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-    const words = plainText ? plainText.split(" ").length : 120;
-    const entry = {
-      id: `art-${Date.now().toString(36)}`,
-      workspaceId: state.session.activeWorkspaceId,
-      channelId: resolvedChannel,
-      title,
-      slug: cleanSlug,
-      status: "Publish-Ready",
-      publishedTargets: [`${domain} Website`, "X", "LinkedIn"],
-      words: Math.max(words, 180),
-      updatedAt: "2026-11-25 (Studio)",
-      triliumNoteId: `tril-${Math.floor(8900 + Math.random() * 900)}`,
-      seoScore: 95,
-      excerpt: plainText.slice(0, 175) + (plainText.length > 175 ? "…" : ""),
-      affiliateProps: state.content.articles[0]?.affiliateProps ?? {
-        slug: "hetzner",
-        title: "Hetzner Cloud NVMe",
-        badge: "Studio Pick",
-        summary: "Self-hosted creator stack.",
-        cta: "Launch →",
-        commission: "10% rev share"
-      },
-      sponsorProps: state.content.articles[0]?.sponsorProps ?? {
-        sponsor: "TradingView",
-        headline: "Macro & Flow Workspace",
-        copy: "30-day creator trial.",
-        cta: "Try Free",
-        slug: "tradingview"
-      }
-    };
-    state.content.articles = [entry, ...state.content.articles];
     autoRecordWorkBlock({ title: `Published Article: ${title}`, scenario: "article", minutes: 45, tool: "Article Rich HTML Studio" });
     recordAudit(`Published article "${title}" from Editorial Workbench`, "ok");
   }
