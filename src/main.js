@@ -393,6 +393,26 @@ function syncTopbarSwitchers(snap) {
     roleSel.disabled = scopedRoles.length <= 1;
   }
 
+  const topLoginBtn = document.getElementById("top-login-btn");
+  const topProfilePill = document.getElementById("top-profile-pill");
+  const topLogoutBtn = document.getElementById("top-logout-btn");
+  const isAuthed = Boolean(snap.session?.authenticated);
+  if (topLoginBtn) topLoginBtn.style.display = isAuthed ? "none" : "";
+  if (topProfilePill) {
+    topProfilePill.style.display = isAuthed ? "inline-flex" : "none";
+    if (isAuthed) topProfilePill.textContent = `${ctx.activeUser.initials || "U"} · ${ctx.activeUser.name}`;
+  }
+  if (topLogoutBtn) {
+    topLogoutBtn.style.display = isAuthed ? "" : "none";
+    if (!topLogoutBtn.dataset.boundLogout) {
+      topLogoutBtn.dataset.boundLogout = "1";
+      topLogoutBtn.addEventListener("click", () => {
+        signOutSession({ toPublicHomepage: true });
+        showToast("Signed out", { tone: "info" });
+      });
+    }
+  }
+
   const quickCaptureBtn = document.getElementById("quick-capture-jump");
   if (quickCaptureBtn) {
     quickCaptureBtn.hidden = ctx.isMasterPlatformScope || !can("pipeline:write", snap);

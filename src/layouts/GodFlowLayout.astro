@@ -505,9 +505,19 @@ const { title, route } = Astro.props;
               type="button"
               id="top-login-btn"
               class="btn btn--subtle btn--sm"
-              aria-label="Open login and session switcher"
+              aria-label="Open sign in"
             >
-              Login / Switch
+              Sign In
+            </button>
+            <span id="top-profile-pill" class="badge mono" style="display:none;align-items:center;gap:0.35rem;"></span>
+            <button
+              type="button"
+              id="top-logout-btn"
+              class="btn btn--subtle btn--sm"
+              style="display:none;"
+              aria-label="Logout"
+            >
+              Logout
             </button>
             <button
               type="button"
