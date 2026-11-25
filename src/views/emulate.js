@@ -284,12 +284,18 @@ export function renderEmulate() {
   );
 
   // Quick One-Click Sandbox Test Cards
-  const quickPresets = [
-    { label: "GodFlow · Editorial", wsId: "ws-godflow", chId: "ch-godflow", userId: "usr-nadia", roleId: "editor_newsletter", dest: "studio", note: "Verify Article Research Desk + Rich HTML Studio isolation" },
-    { label: "GodFlow · Podcast + Simulcast", wsId: "ws-godflow", chId: "ch-godflow", userId: "usr-liam", roleId: "podcast_producer", dest: "studio", note: "Verify Podcast Script Composer & Multi-Platform Live Simulcast" },
-    { label: "Tradester · Live Markets Stream Desk", wsId: "ws-tradester", chId: "ch-tr-live", userId: "usr-tr-vikram", roleId: "trader_host", dest: "studio", note: "Verify Tradester Live Streamer isolation from GodFlow" },
-    { label: "Tradester · Partner Viewer (Confidential)", wsId: "ws-tradester", chId: "all", userId: "usr-tr-guest", roleId: "guest_viewer", dest: "command", note: "Verify internal finance & pipeline data stay hidden" }
-  ];
+  const quickPresets = (snap.workspaces ?? []).flatMap((ws) => {
+    const wsUsers = snap.users.filter((u) => u.userScope !== "platform" && u.workspaceIds.includes(ws.id));
+    return wsUsers.slice(0, 2).map((u) => ({
+      label: `${ws.name} · ${u.name}`,
+      wsId: ws.id,
+      chId: u.channelIds?.[0] || "all",
+      userId: u.id,
+      roleId: u.defaultRoleId,
+      dest: "command",
+      note: `Test ${u.name} (${u.defaultRoleId}) in isolated Sandbox`
+    }));
+  });
 
   const presetsCard = h(
     "section",

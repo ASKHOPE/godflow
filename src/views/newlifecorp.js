@@ -413,7 +413,7 @@ export function renderNewLifeCorpPage({ publicMode = false } = {}) {
         }),
         h("figcaption", { class: "nlc-hero-caption" },
           h("strong", {}, "Multi-Tenant Platform Console"),
-          h("span", { class: "mono-meta" }, "2 Platform Operators → Isolated Customer Tenants (GodFlow & Tradester) → Teams & Users")
+          h("span", { class: "mono-meta" }, "2 Platform Operators → Isolated Customer Tenants → Teams & Users")
         )
       )
     )
@@ -422,8 +422,8 @@ export function renderNewLifeCorpPage({ publicMode = false } = {}) {
   const trustStrip = h(
     "section",
     { class: "nlc-trust-strip", "aria-label": "NewLifeCorp platform scale" },
-    h("div", { class: "nlc-trust-stat" }, h("strong", {}, `${snap.workspaces.length} Customer Tenants`), h("span", { class: "mono-meta" }, "GodFlow & Tradester isolated via PG17 RLS")),
-    h("div", { class: "nlc-trust-stat" }, h("strong", {}, `${totalChannels} Brand Channels`), h("span", { class: "mono-meta" }, "GodFlow & Tradester websites")),
+    h("div", { class: "nlc-trust-stat" }, h("strong", {}, `${snap.workspaces.length} Customer Tenants`), h("span", { class: "mono-meta" }, "Isolated per company via SQLite / Turso")),
+    h("div", { class: "nlc-trust-stat" }, h("strong", {}, `${totalChannels} Brand Channels`), h("span", { class: "mono-meta" }, "Custom tenant domains & websites")),
     h("div", { class: "nlc-trust-stat" }, h("strong", {}, "Podcast Script + Simulcast"), h("span", { class: "mono-meta" }, "Script composer, teleprompter & multi-platform live stream")),
     h("div", { class: "nlc-trust-stat" }, h("strong", {}, "3 Release Tracks"), h("span", { class: "mono-meta" }, "Experimental, Current (Subscribed) & LTS per module"))
   );

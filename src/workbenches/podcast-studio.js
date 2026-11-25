@@ -22,12 +22,7 @@ import {
   safeSetHTML
 } from "../lib/workbench-helpers.js";
 
-let chapters = [
-  { ts: "00:00", title: "Cold Open & Stack Economics" },
-  { ts: "11:20", title: "Replacing SaaS with TriliumNext ETAPI" },
-  { ts: "28:45", title: "RØDE Mid-Roll & Multi-Platform Q&A" },
-  { ts: "41:10", title: "Direct-to-Creator Affiliates & BTCPay Tips" }
-];
+let chapters = [];
 let selectedTranscriptIdx = 0;
 let selectedSourceId = "src-1";
 let rawHtmlMode = false;

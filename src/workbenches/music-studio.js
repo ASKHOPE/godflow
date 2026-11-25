@@ -18,7 +18,7 @@ let stems = [
 ];
 let metronomeOn = false;
 let selectedSourceId = null;
-let draftLyrics = `[Verse 1]\nBlue glow on the monitor glass, 4 AM on the tape\nEvery chord hanging cleanly in the studio space\n\n[Chorus]\nNeon static on the studio wall\nLeave the red light burning till the shadows fall`;
+let draftLyrics = "";
 
 export function renderMusicStudio() {
   const snap = getState();
