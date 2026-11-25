@@ -112,7 +112,8 @@ export function syncSidebarBadges(snapshot) {
   }
 
   // Strict RBAC & Waterfall menu isolation: hide unauthorized/out-of-scope routes, creator editors, and empty groups
-  const { role: activeRole, isGodMode: activeGodMode } = getActiveContext(snapshot);
+  const { role: activeRole, isGodMode: activeGodMode, workspace: activeWs } = getActiveContext(snapshot);
+  const wsScenarios = activeWs?.activeScenarios ?? [];
   const canSeeAllStudios = activeGodMode || activeRole.id === "tenant_admin" || (activeRole.scenarios?.length ?? 0) > 1;
   for (const link of document.querySelectorAll(".rail-item[data-route]")) {
     const li = link.closest("li");
@@ -124,7 +125,9 @@ export function syncSidebarBadges(snapshot) {
     }
     const scId = link.dataset.studioScenario;
     if (scId) {
-      li.hidden = !(activeGodMode || activeRole.id === "tenant_admin" || canAccessTool(`studio:${scId}`, snapshot));
+      const enabledInTenant = !wsScenarios.length || wsScenarios.includes(scId);
+      const roleAllowed = activeGodMode || activeRole.id === "tenant_admin" || canAccessTool(`studio:${scId}`, snapshot);
+      li.hidden = !(enabledInTenant && roleAllowed);
     } else if (link.dataset.studioAll === "true") {
       li.hidden = !canSeeAllStudios;
     } else {
