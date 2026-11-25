@@ -338,7 +338,16 @@ export function resetState() {
 export function getActiveContext(snapshot = state) {
   const workspace =
     snapshot.workspaces.find((w) => w.id === snapshot.session.activeWorkspaceId) ??
-    snapshot.workspaces[0];
+    snapshot.workspaces[0] ?? {
+      id: "__none__",
+      name: "God Flow",
+      domain: "godflow.media",
+      shortDomain: "go.godflow.media",
+      channels: [],
+      teams: [],
+      flags: {},
+      suiteSubscriptions: {}
+    };
   const activeUser =
     snapshot.users.find((u) => u.id === snapshot.session.activeUserId) ?? snapshot.users[0];
   const realUser =
