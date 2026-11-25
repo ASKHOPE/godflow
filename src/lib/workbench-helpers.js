@@ -520,7 +520,8 @@ export function createStudioTabs({
   sourcesNode,
   brainstormNode,
   editorNode,
-  whiteboardNode
+  whiteboardNode,
+  previewNode = null
 }) {
   return createTabs({
     ariaLabel,
@@ -530,7 +531,8 @@ export function createStudioTabs({
       { id: "sources", label: "1. Search & Crawl Sources", render: () => sourcesNode },
       { id: "brainstorm", label: "2. Brainstorm", render: () => brainstormNode },
       { id: "editor", label: "3. Editor", render: () => editorNode },
-      { id: "whiteboard", label: "4. Collaboration & Whiteboard", render: () => whiteboardNode }
+      { id: "whiteboard", label: "4. Collaboration & Whiteboard", render: () => whiteboardNode },
+      ...(previewNode ? [{ id: "preview", label: "5. Live Preview", render: () => previewNode }] : [])
     ]
   });
 }

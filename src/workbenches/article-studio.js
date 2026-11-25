@@ -1,5 +1,5 @@
 import { createStatusPill, h } from "../lib/dom.js";
-import { addBrainstormNote, addResearchSource, getState, removeBrainstormNote, saveArticleDraft } from "../lib/store.js";
+import { addBrainstormNote, addResearchSource, getState, getTenantSlice, removeBrainstormNote, saveArticleDraft } from "../lib/store.js";
 import { showToast } from "../lib/toast.js";
 import { createStudioTabs, createToolCard, createWhiteboardPane, safeSetHTML } from "../lib/workbench-helpers.js";
 
@@ -292,10 +292,46 @@ export function renderArticleStudio() {
     )
   );
 
+  const savedArticles = getTenantSlice(snap).articles ?? [];
+  const fileManagerBar = h(
+    "div",
+    { style: "display:flex;flex-wrap:wrap;gap:0.45rem;align-items:center;padding:0.55rem 0.7rem;border-radius:var(--radius-sm);background:var(--bg-canvas);border:1px solid var(--border-subtle);" },
+    h("span", { class: "mono-meta" }, `File Manager (${savedArticles.length}):`),
+    ...savedArticles.map((art) =>
+      h("button", {
+        type: "button",
+        class: slugIn.value === art.slug ? "filter-pill is-active" : "filter-pill",
+        onClick: () => {
+          titleIn.value = art.title;
+          slugIn.value = art.slug;
+          currentDraftHtml = art.html || `<p>${art.excerpt || ""}</p>`;
+          if (htmlSourceMode) rawHtmlArea.value = currentDraftHtml;
+          else safeSetHTML(visualEditor, currentDraftHtml);
+          updateWordCount();
+          showToast(`Opened "${art.title}" in Editor`, { tone: "info" });
+        }
+      }, art.title.slice(0, 32))
+    ),
+    h("button", {
+      type: "button",
+      class: "btn btn--subtle btn--sm",
+      onClick: () => {
+        titleIn.value = "Untitled Article";
+        slugIn.value = `article-${Date.now().toString(36)}`;
+        currentDraftHtml = "<h2>New Article</h2><p>Start writing here...</p>";
+        if (htmlSourceMode) rawHtmlArea.value = currentDraftHtml;
+        else safeSetHTML(visualEditor, currentDraftHtml);
+        updateWordCount();
+        showToast("Created new blank article", { tone: "ok" });
+      }
+    }, "+ New Article")
+  );
+
   const editorPane = createToolCard(
     "3. Rich Text / HTML Article Composer",
     htmlSourceMode ? "HTML Source" : "Rich Visual",
     "ok",
+    fileManagerBar,
     h("div", { class: "form-grid" },
       h("div", { class: "field" }, h("label", { class: "field-label", for: "ed-title" }, "Article Headline"), titleIn),
       h("div", { class: "field" }, h("label", { class: "field-label", for: "ed-slug" }, "EmDash Slug"), slugIn)
@@ -348,12 +384,33 @@ export function renderArticleStudio() {
     }
   });
 
+  const previewSurface = h("div", {
+    class: "rich-editor-surface",
+    style: "min-block-size:280px;padding:1.25rem;background:var(--bg-canvas);"
+  });
+  safeSetHTML(previewSurface, currentDraftHtml);
+
+  const previewPane = createToolCard(
+    "5. Live Article Preview",
+    "Reader View",
+    "info",
+    h("div", { style: "display:flex;flex-direction:column;gap:0.35rem;padding-bottom:0.65rem;border-bottom:1px solid var(--border-subtle);" },
+      h("h2", { style: "margin:0;font-size:var(--text-xl);" }, titleIn.value || "Untitled Article"),
+      h("span", { class: "mono-meta" }, `/${slugIn.value || "draft"} · ${wordCounter.textContent}`)
+    ),
+    previewSurface
+  );
+
   return createStudioTabs({
     ariaLabel: "Article studio workspace tabs",
     initialTab: "editor",
+    onTabChange: (tabId) => {
+      if (tabId === "preview") safeSetHTML(previewSurface, currentDraftHtml);
+    },
     sourcesNode: researchPane,
     brainstormNode: brainstormPane,
     editorNode: editorPane,
-    whiteboardNode: whiteboardPane
+    whiteboardNode: whiteboardPane,
+    previewNode: previewPane
   });
 }
