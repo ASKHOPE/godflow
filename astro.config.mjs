@@ -1,4 +1,5 @@
 import { defineConfig } from "astro/config";
+import vercel from "@astrojs/vercel";
 import { handleSqliteApiRequest } from "./src/server/sqlite-db.js";
 
 /** Attaches persistent node:sqlite API middleware (/api/db/health, /api/db/state, /api/db/reset). */
@@ -43,5 +44,6 @@ function sqlitePersistenceIntegration() {
 }
 
 export default defineConfig({
+  adapter: vercel(),
   integrations: [sqlitePersistenceIntegration()]
 });
