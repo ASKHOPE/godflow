@@ -270,16 +270,16 @@ export function createSourceGatheringCard({
       let crawledTitle = titleIn.value.trim();
       let crawledSummary = sumIn.value.trim();
       try {
-        const res = await fetch(rawUrl);
-        if (res.ok) {
-          const html = await res.text();
-          const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-          const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
-          if (!crawledTitle && titleMatch?.[1]) crawledTitle = titleMatch[1].trim();
-          if (!crawledSummary && descMatch?.[1]) crawledSummary = descMatch[1].trim();
+        const apiRes = await fetch(`/api/crawl?url=${encodeURIComponent(rawUrl)}`);
+        if (apiRes.ok) {
+          const data = await apiRes.json();
+          if (data?.ok) {
+            if (!crawledTitle && data.title) crawledTitle = data.title;
+            if (!crawledSummary && data.summary) crawledSummary = data.summary;
+          }
         }
       } catch {
-        /* CORS fallback: pin URL metadata cleanly */
+        /* fallback to URL metadata */
       }
       const host = rawUrl.replace(/^https?:\/\//i, "").split("/")[0] || "web-source";
       const created = addResearchSource({

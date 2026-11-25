@@ -97,17 +97,40 @@ export function renderArticleStudio() {
       "form",
       {
         style: "display:flex;flex-direction:column;gap:0.45rem;padding-top:0.25rem;border-top:1px solid var(--border-subtle);",
-        onSubmit: (e) => {
+        onSubmit: async (e) => {
           e.preventDefault();
-          if (!urlTitleIn.value.trim() || !urlIn.value.trim()) return;
-          const created = addResearchSource({
-            title: urlTitleIn.value.trim(),
-            url: urlIn.value.trim(),
-            summary: sumIn.value.trim(),
-            body: sumIn.value.trim() || `Archived reader view for ${urlIn.value.trim()}`
-          });
-          selectedSourceId = created.id;
-          showToast("Added web source to Research Desk (+20m tracked)", { tone: "ok" });
+          const rawUrl = urlIn.value.trim();
+          if (!rawUrl) return;
+          const btn = e.target.querySelector('button[type="submit"]');
+          if (btn) {
+            btn.disabled = true;
+            btn.textContent = "Crawling...";
+          }
+          try {
+            let crawled = null;
+            try {
+              const res = await fetch(`/api/crawl?url=${encodeURIComponent(rawUrl)}`);
+              if (res.ok) {
+                const json = await res.json();
+                if (json?.ok) crawled = json;
+              }
+            } catch {
+              // fallback below
+            }
+            const created = addResearchSource({
+              title: urlTitleIn.value.trim() || crawled?.title || rawUrl,
+              url: crawled?.url || rawUrl,
+              summary: sumIn.value.trim() || crawled?.summary || `Archived reader view for ${rawUrl}`,
+              body: crawled?.body || sumIn.value.trim() || `Archived reader view for ${rawUrl}`
+            });
+            selectedSourceId = created.id;
+            showToast(crawled ? "Crawled & added source to Research Desk (+20m tracked)" : "Added web source to Research Desk (+20m tracked)", { tone: "ok" });
+          } finally {
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = "Fetch & Add Source";
+            }
+          }
         }
       },
       h("span", { class: "mono-meta" }, "+ Save Online Article URL"),
@@ -327,14 +350,59 @@ export function renderArticleStudio() {
     }, "+ New Article")
   );
 
+  let currentParentId = "";
+
+  const newChildNoteBtn = h("button", {
+    type: "button",
+    class: "btn btn--subtle btn--sm",
+    onClick: () => {
+      const parentSlug = slugIn.value.trim();
+      currentParentId = parentSlug;
+      const suffix = Date.now().toString(36).slice(-4);
+      titleIn.value = parentSlug ? "Child Note" : "New Note";
+      slugIn.value = `${parentSlug ? `${parentSlug}-` : "note-"}${suffix}`;
+      currentDraftHtml = "<p>Start writing your note...</p>";
+      if (htmlSourceMode) rawHtmlArea.value = currentDraftHtml;
+      else safeSetHTML(visualEditor, currentDraftHtml);
+      updateWords();
+      saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), parentId: currentParentId, html: currentDraftHtml, publishToHub: false });
+      showToast(parentSlug ? `Created child note under ${parentSlug}` : "Created new root note", { tone: "ok" });
+    }
+  }, "+ Child Note");
+
   const triliumTagBtn = h("button", {
     type: "button",
     class: "btn btn--subtle btn--sm",
     onClick: () => {
-      saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), html: currentDraftHtml, publishToHub: true });
+      saveArticleDraft({ title: titleIn.value.trim(), slug: slugIn.value.trim(), parentId: currentParentId, html: currentDraftHtml, publishToHub: true });
       showToast("Tagged #publish-ready & synced via TriliumNext ETAPI", { tone: "ok" });
     }
   }, "#publish-ready + ETAPI Sync");
+
+  function renderNoteTreeNodes(parentId = "", depth = 0) {
+    const children = savedArticles.filter((a) => (a.parentId || "") === parentId);
+    const items = [];
+    for (const art of children) {
+      items.push(
+        h("button", {
+          type: "button",
+          class: `org-folder-btn${slugIn.value === art.slug ? " is-active" : ""}`,
+          style: depth > 0 ? `padding-left:${0.65 + depth * 0.75}rem;` : "",
+          onClick: () => {
+            titleIn.value = art.title;
+            slugIn.value = art.slug;
+            currentParentId = art.parentId || "";
+            currentDraftHtml = art.html || `<p>${art.excerpt || ""}</p>`;
+            if (htmlSourceMode) rawHtmlArea.value = currentDraftHtml;
+            else safeSetHTML(visualEditor, currentDraftHtml);
+            updateWords();
+          }
+        }, h("span", {}, `${depth > 0 ? "↳ " : ""}${art.title.slice(0, 24)}`), h("span", { class: "mono-meta" }, art.status === "Published" ? "#live" : "#draft"))
+      );
+      items.push(...renderNoteTreeNodes(art.slug, depth + 1));
+    }
+    return items;
+  }
 
   const editorPane = createToolCard(
     "3. TriliumNext Note Tree & Rich Editor",
@@ -349,22 +417,10 @@ export function renderArticleStudio() {
         ),
         h("div", { class: "org-folder-list" },
           ...(savedArticles.length
-            ? savedArticles.map((art) =>
-                h("button", {
-                  type: "button",
-                  class: `org-folder-btn${slugIn.value === art.slug ? " is-active" : ""}`,
-                  onClick: () => {
-                    titleIn.value = art.title;
-                    slugIn.value = art.slug;
-                    currentDraftHtml = art.html || `<p>${art.excerpt || ""}</p>`;
-                    if (htmlSourceMode) rawHtmlArea.value = currentDraftHtml;
-                    else safeSetHTML(visualEditor, currentDraftHtml);
-                    updateWordCount();
-                  }
-                }, h("span", {}, art.title.slice(0, 26)), h("span", { class: "mono-meta" }, art.status === "Published" ? "#live" : "#draft"))
-              )
+            ? renderNoteTreeNodes("", 0)
             : [h("span", { class: "mono-meta" }, "No notes yet — click + New Article")])
         ),
+        newChildNoteBtn,
         triliumTagBtn
       ),
       h("div", { style: "display:flex;flex-direction:column;gap:0.65rem;min-inline-size:0;" },
